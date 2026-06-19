@@ -1,483 +1,228 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-    <meta charset="UTF-8">
-    <title>All-in-RAG | 大模型应用开发实战：RAG技术全栈指南</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="面向大模型应用开发者的RAG（检索增强生成）技术全栈教程，从零开始掌握RAG技术的核心原理与实际应用">
-    <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@latest/lib/themes/vue.css">
-    <style>
-        /* --- 1. 原有样式保持 --- */
-        /* 脚注样式 */
-        .footnote {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-left: 4px solid #42b883;
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
-        .footnote p {
-            margin: 0;
-        }
-        sup a {
-            color: #42b883;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        sup a:hover {
-            text-decoration: underline;
-        }
-        .footnote a {
-            color: #42b883;
-            text-decoration: none;
-            margin-left: 5px;
-        }
-        .footnote a:hover {
-            text-decoration: underline;
-        }
-        /* Mermaid图表样式 */
-        .mermaid {
-            text-align: center;
-            margin: 20px 0;
-        }
-        .mermaid svg {
-            max-width: 100%;
-            height: auto;
-        }
-        /* Logo样式 */
-        .app-name-link {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 10px 0;
-        }
-        .app-name-link img {
-            max-height: 60px;
-            width: auto;
-            margin: 0 auto;
-            vertical-align: middle;
-            display: block !important;
-        }
-        .app-name {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-        /* 隐藏文字，只显示logo */
-        .app-name-link .app-name-text {
-            display: none;
-        }
-        /* 调整侧边栏logo区域 */
-        .sidebar .app-name {
-            text-align: center;
-            padding: 15px 0;
-        }
-        /* 语言切换器样式 */
-        .app-nav {
-            position: fixed;
-            right: 20px;
-            top: 20px;
-            z-index: 10;
-        }
-        .app-nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .app-nav li {
-            display: inline-block;
-        }
-        #lang-selector {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 6px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-        }
-        #lang-selector:hover {
-            border-color: #42b883;
-        }
-        #lang-selector:focus {
-            outline: none;
-            border-color: #42b883;
-            box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.2);
-        }
-        
-        /* 修复表格渲染问题 */
-        .markdown-section table {
-            display: table;
-            width: auto;
-            max-width: 100%;
-            table-layout: auto;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎰 抽卡模拟器</title>
 
-        /* --- 2. 新增：暗黑模式核心样式 --- */
-        :root {
-            --dark-bg: #1a1a1a;
-            --dark-sidebar: #141414;
-            --dark-border: #333;
-            --theme-color: #42b883;
-            
-            /* 字体颜色优化：使用更高亮度的灰白色，提高对比度 */
-            --dark-text: #e6e6e6; 
-            --dark-code-text: #f8f8f2;
-            --dark-code-bg: #2b2b2b;
-        }
+<!-- PWA 清单 (支持 Android/Chrome 安装到桌面) -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0f0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="抽卡模拟器">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:1.6rem;margin-bottom:16px;background:linear-gradient(135deg,#f5af19,#f12711);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-        /* 基础反色 */
-        body.dark-mode {
-            background-color: var(--dark-bg);
-            color: var(--dark-text);
-        }
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px;background:#1a1a2e;color:#aaa;transition:.2s}
+.tabs button.active{background:#e94560;color:#fff}
 
-        /* 侧边栏适配 */
-        body.dark-mode .sidebar {
-            background-color: var(--dark-sidebar);
-            border-right: 1px solid var(--dark-border);
-            color: var(--dark-text);
-        }
-        body.dark-mode .sidebar-nav li a {
-            color: #999;
-        }
-        body.dark-mode .sidebar-nav li.active > a {
-            color: var(--theme-color);
-            border-right: 2px solid var(--theme-color);
-        }
+.card-area{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;min-height:120px;margin-bottom:16px}
+.card{width:120px;padding:12px 8px;border-radius:12px;text-align:center;font-size:13px;animation:fadeIn .4s;transition:transform .2s}
+.card:hover{transform:scale(1.08)}
+.card .name{font-weight:bold;margin-bottom:4px}
+.card .stars{font-size:12px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-        /* 代码块适配 - 增强对比度 */
-        body.dark-mode pre {
-            background-color: var(--dark-code-bg) !important;
-        }
-        body.dark-mode code {
-            background-color: var(--dark-code-bg) !important;
-            color: var(--dark-code-text) !important;
-        }
-        /* 行内代码 */
-        body.dark-mode .markdown-section code {
-            color: #f08d49;
-            background-color: rgba(255,255,255,0.1);
-        }
+.SSR{background:linear-gradient(135deg,#f5af19,#f12711);box-shadow:0 0 20px rgba(245,175,25,.4);color:#fff}
+.SR{background:linear-gradient(135deg,#8e2de2,#4a00e0);box-shadow:0 0 12px rgba(142,45,226,.3);color:#fff}
+.R{background:linear-gradient(135deg,#2c3e50,#3498db);color:#ddd}
 
-        /* 标题适配 */
-        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
-            color: #ffffff; /* 标题纯白 */
-        }
-        body.dark-mode blockquote {
-            color: #b0b0b0;
-            background: rgba(255,255,255,0.05);
-            border-left-color: var(--theme-color);
-        }
+.chest-legend{background:linear-gradient(135deg,#f5af19,#f12711);box-shadow:0 0 20px rgba(245,175,25,.4);color:#fff}
+.chest-epic{background:linear-gradient(135deg,#8e2de2,#4a00e0);box-shadow:0 0 12px rgba(142,45,226,.3);color:#fff}
+.chest-rare{background:linear-gradient(135deg,#2c3e50,#3498db);color:#fff}
+.chest-common{background:linear-gradient(135deg,#3a3a5c,#5a5a7a);color:#ccc}
 
-        /* 表格适配 */
-        body.dark-mode .markdown-section tr:nth-child(2n) {
-            background-color: rgba(255,255,255,0.03);
-        }
-        body.dark-mode .markdown-section td, 
-        body.dark-mode .markdown-section th {
-            border-color: var(--dark-border);
-            background-color: transparent;
-        }
+.stats{display:flex;gap:16px;margin-bottom:16px;font-size:14px;flex-wrap:wrap;justify-content:center}
 
-        /* --- 特殊组件适配 --- */
+.actions{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
+.actions button{padding:12px 24px;border:none;border-radius:10px;cursor:pointer;font-size:15px;font-weight:bold;transition:.2s}
+.btn-main{background:linear-gradient(135deg,#e94560,#c23152);color:#fff}
+.btn-main:active{transform:scale(.95)}
+.btn-sub{background:#1a1a2e;color:#aaa;border:1px solid #333}
+.btn-sub:active{transform:scale(.95)}
 
-        /* 1. 适配你的脚注 (footnote) */
-        body.dark-mode .footnote {
-            background-color: rgba(255,255,255,0.05); /* 深色背景 */
-            color: #cccccc;
-            border-left-color: var(--theme-color);
-        }
-        body.dark-mode .footnote a {
-            color: var(--theme-color);
-        }
+.config-area{margin-top:12px;width:100%;max-width:400px;display:none}
+.config-area textarea{width:100%;height:120px;background:#1a1a2e;color:#ccc;border:1px solid #333;border-radius:8px;padding:10px;font-size:13px;resize:vertical}
+.config-area .hint{font-size:11px;color:#666;margin:4px 0 8px}
+.config-area button{background:#e94560;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px}
 
-        /* 2. 适配语言选择下拉框 */
-        body.dark-mode #lang-selector {
-            background-color: #333 !important;
-            color: #fff !important;
-            border-color: #555 !important;
-        }
-
-        /* 3. Mermaid 图表反色 */
-        body.dark-mode .mermaid {
-            filter: invert(1) hue-rotate(180deg);
-        }
-
-        /* --- 3. 侧边栏开关按钮样式 --- */
-        .sidebar-toggle-btn {
-            cursor: pointer;
-            display: block;
-            text-align: center;
-            padding: 10px 0;
-            margin: 0 15px 10px 15px;
-            font-weight: bold;
-            font-size: 14px;
-            border-radius: 4px;
-            background-color: rgba(0,0,0,0.05);
-            color: #505d6b;
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.3s;
-        }
-        body.dark-mode .sidebar-toggle-btn {
-            background-color: rgba(255,255,255,0.1);
-            color: #ccc;
-            border: 1px solid #444;
-        }
-        .sidebar-toggle-btn:hover {
-            background-color: var(--theme-color);
-            color: white;
-        }
-    </style>
+.history{width:100%;max-width:400px;margin-top:20px;font-size:12px;color:#666}
+.history summary{margin-bottom:8px;cursor:pointer;color:#999}
+.history pre{background:#1a1a2e;padding:10px;border-radius:8px;max-height:200px;overflow-y:auto;font-size:11px}
+</style>
 </head>
-
 <body>
-    <div id="app"></div>
-    <script src="//cdn.jsdelivr.net/npm/mermaid@8.0.0-rc.8/dist/mermaid.min.js"></script>
-    <script>
-        window.$docsify = {
-            name: 'All-in-RAG',
-            repo: 'https://github.com/datawhalechina/all-in-rag',
-            logo: './logo.svg',
-            loadSidebar: true,
-            auto2top: true,
-            subMaxLevel: 3,
-            alias: {
-                '/en/_sidebar.md': '/en/_sidebar.md',
-                '/en/.*/_sidebar.md': '/en/_sidebar.md',
-                '/.*/_sidebar.md': '/_sidebar.md'
-            },
-            search: {
-                maxAge: 86400000,
-                paths: 'auto',
-                placeholder: {
-                    '/en/': '🔍 Search',
-                    '/': '🔍 搜索'
-                },
-                noData: {
-                    '/en/': '😞 No Results',
-                    '/': '😞 找不到结果'
-                },
-                depth: 6
-            },
-            pagination: {
-                previousText: {
-                    '/en/': 'Previous',
-                    '/': '上一章节'
-                },
-                nextText: {
-                    '/en/': 'Next',
-                    '/': '下一章节'
-                }
-            },
-            count: {
-                countable: true,
-                fontsize: '0.9em',
-                color: 'rgb(90,90,90)',
-                language: 'chinese'
-            },
 
-            plugins: [
-                // --- 新增：暗黑模式开关插件 ---
-                function(hook, vm) {
-                    hook.doneEach(function() {
-                        const sidebar = document.querySelector('.sidebar-nav');
-                        // 防止重复添加
-                        if (!sidebar || document.querySelector('.sidebar-toggle-btn')) return;
+<h1>🎰 抽卡模拟器 v2.0</h1>
 
-                        const btn = document.createElement('div');
-                        btn.className = 'sidebar-toggle-btn';
-                        
-                        // 初始化状态
-                        const savedTheme = localStorage.getItem('theme-mode');
-                        if (savedTheme === 'dark') {
-                            document.body.classList.add('dark-mode');
-                            btn.textContent = '🌙 Switch to Light';
-                        } else {
-                            btn.textContent = '☀️ Switch to Dark';
-                        }
+<div class="tabs">
+  <button id="tabGenshin" class="active">原神抽卡</button>
+  <button id="tabChest">宝箱开箱</button>
+</div>
 
-                        // 点击事件
-                        btn.onclick = function() {
-                            document.body.classList.toggle('dark-mode');
-                            const isDark = document.body.classList.contains('dark-mode');
-                            localStorage.setItem('theme-mode', isDark ? 'dark' : 'light');
-                            btn.textContent = isDark ? '🌙 Switch to Light' : '☀️ Switch to Dark';
-                        };
+<div class="stats" id="stats"></div>
 
-                        // 插入到侧边栏最顶部
-                        sidebar.insertBefore(btn, sidebar.firstChild);
-                    });
-                },
+<div class="card-area" id="cards">
+  <div style="color:#555;padding:40px">点击下方按钮开始抽卡 ✨</div>
+</div>
 
-                // --- 原有插件：脚注处理 ---
-                function(hook, vm) {
-                    hook.beforeEach(function (html) {
-                        html = html.replace(/\[\^([^\]]+)\](?!:)/g, '<sup class="footnote-ref"><a href="#fn-$1" data-footnote-ref="$1" id="fnref-$1">$1</a></sup>');
-                        return html;
-                    });
+<div class="actions" id="actions"></div>
 
-                    hook.afterEach(function (html, next) {
-                        try {
-                            html = html.replace(/<p>\s*\[\^([^\]]+)\]:\s*([\s\S]*?)<\/p>/g, function(_, id, content) {
-                                return '<div class="footnote" id="fn-' + id + '"><p>' + content + ' <a href="#fnref-' + id + '">↩</a></p></div>';
-                            });
-                        } catch (e) { /* 忽略 */ }
-                        next(html);
-                    });
+<div class="config-area" id="configArea">
+  <div class="hint">每行: 稀有度 概率 物品1,物品2,...<br>例: 传说 0.05 霜之哀伤,无尽之刃</div>
+  <textarea id="configText" placeholder="传说 0.05 霜之哀伤,无尽之刃&#10;史诗 0.15 暗影斗篷,龙鳞甲&#10;普通 0.80 铁剑,布甲"></textarea>
+  <button onclick="applyCustomChest()">✅ 应用配置</button>
+</div>
 
-                    hook.doneEach(function () {
-                        try {
-                            var prev = window.__footnoteContainer;
-                            var prevHandler = window.__footnoteHandler;
-                            if (prev && prevHandler) {
-                                prev.removeEventListener('click', prevHandler, true);
-                            }
+<details class="history"><summary>📋 抽卡记录</summary><pre id="log"></pre></details>
 
-                            var container = document.querySelector('.markdown-section');
-                            if (!container) return;
+<script>
+// ═══ 数据 ═══
+const GENSHIN = {
+  SSR:{rate:.006,pity:90,pool:["七七","刻晴","莫娜","迪卢克","琴","钟离","胡桃","甘雨","雷电将军","纳西妲"]},
+  SR:{rate:.051,pity:10,pool:["凝光","行秋","班尼特","香菱","菲谢尔","砂糖","北斗","罗莎莉亚","烟绯","久岐忍"]},
+  R:{rate:.943,pity:0,pool:["黑缨枪","弹弓","魔导绪论","铁影阔剑","黎明神剑","讨龙英杰谭","冷刃","沐浴龙血的剑","神射手之誓","飞天御剑"]},
+};
 
-                            var handler = function (e) {
-                                var a = e.target && e.target.closest ? e.target.closest('a') : null;
-                                if (!a) return;
-                                var href = a.getAttribute('href') || '';
-                                if (!/^#(fn-|fnref-)/.test(href)) return;
-                                var targetId = href.slice(1);
-                                var el = document.getElementById(targetId);
-                                if (!el) return;
-                                e.preventDefault();
-                                e.stopPropagation();
-                                try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-                                catch (_) { el.scrollIntoView(true); }
-                            };
+let CHEST = {
+  "传奇":{rate:.01,pool:["霜之哀伤","无尽之刃","灭世者之帽"],css:"chest-legend"},
+  "史诗":{rate:.08,pool:["暗影斗篷","龙鳞甲","凤凰羽","冰晶法杖"],css:"chest-epic"},
+  "稀有":{rate:.21,pool:["秘银剑","魔法书","精灵弓","圣光盾"],css:"chest-rare"},
+  "普通":{rate:.70,pool:["铁剑","布甲","木盾","治疗药水","面包","箭矢"],css:"chest-common"},
+};
 
-                            container.addEventListener('click', handler, true);
-                            window.__footnoteContainer = container;
-                            window.__footnoteHandler = handler;
-                        } catch (e) {}
-                    });
-                },
-                // --- 原有插件：语言切换插件 ---
-                function(hook, vm) {
-                    hook.mounted(function() {
-                        var nav = document.querySelector('.app-nav');
-                        if (!nav) {
-                            nav = document.createElement('nav');
-                            nav.className = 'app-nav';
-                            document.querySelector('main').appendChild(nav);
-                        }
+let pitySSR=0, pitySR=0, log=[], mode='genshin';
 
-                        var langSwitcher = document.createElement('ul');
-                        langSwitcher.innerHTML = `
-                            <li>
-                                <select id="lang-selector">
-                                    <option value="">中文</option>
-                                    <option value="en">English</option>
-                                </select>
-                            </li>
-                        `;
-                        nav.appendChild(langSwitcher);
+// ═══ 引擎 ═══
+function genshinPull(n){
+  const res=[];
+  for(let i=0;i<n;i++){
+    pitySSR++;pitySR++;
+    let r;
+    if(pitySSR>=GENSHIN.SSR.pity){r='SSR';pitySSR=0}
+    else if(pitySR>=GENSHIN.SR.pity){r='SR';pitySR=0}
+    else{
+      const roll=Math.random();
+      if(roll<GENSHIN.SSR.rate){r='SSR';pitySSR=pitySR=0}
+      else if(roll<GENSHIN.SSR.rate+GENSHIN.SR.rate){r='SR';pitySR=0}
+      else r='R';
+    }
+    const name=GENSHIN[r].pool[Math.floor(Math.random()*GENSHIN[r].pool.length)];
+    res.push({rarity:r,name});
+  }
+  return res;
+}
 
-                        var selector = document.getElementById('lang-selector');
-                        selector.addEventListener('change', function(e) {
-                            var lang = e.target.value;
-                            var currentPath = location.hash.replace('#/', '');
+function chestPull(n,cfg=CHEST){
+  const res=[];
+  const entries=Object.entries(cfg);
+  const total=entries.reduce((s,[,v])=>s+v.rate,0);
+  for(let i=0;i<n;i++){
+    let roll=Math.random()*total, cum=0;
+    for(const [rarity,info] of entries){
+      cum+=info.rate;
+      if(roll<=cum){res.push({rarity,name:info.pool[Math.floor(Math.random()*info.pool.length)]});break}
+    }
+  }
+  return res;
+}
 
-                            if (lang === '') {
-                                if (currentPath.startsWith('en/')) {
-                                    location.hash = '#/' + currentPath.replace('en/', '');
-                                } else {
-                                    location.hash = '#/';
-                                }
-                            } else {
-                                if (currentPath === '' || currentPath === '/') {
-                                    location.hash = '#/en/';
-                                } else if (currentPath.startsWith('en/')) {
-                                    return;
-                                } else {
-                                    location.hash = '#/en/' + currentPath;
-                                }
-                            }
-                        });
+// ═══ 渲染 ═══
+const stars={SSR:'★★★★★',SR:'★★★★',R:'★★★'};
+const chestStars={传奇:'👑',史诗:'💎',稀有:'⭐',普通:'•'};
 
-                        function updateSelector() {
-                            var currentPath = location.hash.replace('#/', '');
-                            if (currentPath.startsWith('en/')) {
-                                selector.value = 'en';
-                            } else {
-                                selector.value = '';
-                            }
-                        }
+function render(res,cfgMap){
+  const cards=document.getElementById('cards');
+  cards.innerHTML=res.map(r=>{
+    const cls=cfgMap[r.rarity]?.css||r.rarity;
+    const star=mode==='genshin'?stars[r.rarity]||'':chestStars[r.rarity]||'';
+    return `<div class="card ${cls}"><div class="name">${r.name}</div><div class="stars">${star}</div></div>`;
+  }).join('');
 
-                        updateSelector();
-                        window.addEventListener('hashchange', updateSelector);
-                    });
-                },
-                // --- 原有插件：图片相对路径修复 ---
-                function(hook, vm) {
-                    function getRouteDir() {
-                        var hash = decodeURIComponent(window.location.hash || '');
-                        if (!hash || hash === '#/' || hash === '#') return '';
-                        var path = hash.replace(/^#\//, '').replace(/(\?.*|#.*)/g, '');
-                        if (path && !path.endsWith('/')) {
-                            path = path.replace(/[^\/]*$/, '');
-                        }
-                        return path;
-                    }
+  const cnt={};res.forEach(r=>cnt[r.rarity]=(cnt[r.rarity]||0)+1);
+  document.getElementById('stats').innerHTML=Object.entries(cnt).map(([k,v])=>{
+    const cls=cfgMap[k]?.css||k;
+    return `<span class="card ${cls}" style="width:auto;padding:6px 12px;font-size:12px">${k} ×${v}</span>`;
+  }).join('');
 
-                    hook.doneEach(function() {
-                        try {
-                            var routeDir = getRouteDir();
-                            var base = window.location.origin + window.location.pathname + routeDir;
-                            var selector = '.markdown-section img:not([data-origin])';
-                            var imgs = document.querySelectorAll(selector);
-                            imgs.forEach(function(img) {
-                                var src = img.getAttribute('src');
-                                if (!src) return;
-                                if (/^(https?:)?\/\//i.test(src) || src.startsWith('/')) return;
-                                try {
-                                    var abs = new URL(src, base).pathname;
-                                    img.setAttribute('src', abs);
-                                } catch (e) {}
-                            });
-                        } catch (e) {}
-                    });
-                }
-            ]
-        }
-    </script>
-    <!-- Put them above docsify.min.js -->
-    <script src="//cdn.jsdelivr.net/npm/docsify@latest/lib/docsify.min.js"></script>
-    <!-- 搜索功能 -->
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-    <!-- 新增：图片放大插件 (官方插件，稳定支持动态路由) -->
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
+  const time=new Date().toLocaleTimeString();
+  const line=`[${time}] ${res.map(r=>`${r.rarity}:${r.name}`).join(' | ')}`;
+  log.unshift(line);if(log.length>50)log.pop();
+  document.getElementById('log').textContent=log.join('\n');
+}
 
-    <!-- code render-->
-    <script src="//cdn.jsdelivr.net/npm/prismjs@latest/components/prism-bash.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/prismjs@latest/components/prism-python.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-pagination@latest/dist/docsify-pagination.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-copy-code"></script>
+// ═══ UI 交互 ═══
+function getCfgMap(){
+  if(mode==='genshin') return GENSHIN;
+  const m={};
+  for(const [k,v] of Object.entries(CHEST)) m[k]={...v,css:v.css||'R'};
+  return m;
+}
 
-    <script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/marked@3"></script>
-    <!-- CDN files for docsify-katex -->
-    <script src="//cdn.jsdelivr.net/npm/docsify-katex@latest/dist/docsify-katex.js"></script>
-    <!-- 字数统计 -->
-    <script src="//unpkg.com/docsify-count/dist/countable.js"></script>
-    <!-- Mermaid -->
-    <script src="//cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js"></script>
-    <script src="//unpkg.com/docsify-mermaid@latest/dist/docsify-mermaid.js"></script>
-    <script>mermaid.initialize({ startOnLoad: true });</script>
+function doPull(n){
+  const res=mode==='genshin'?genshinPull(n):chestPull(n);
+  render(res,getCfgMap());
+}
 
+function applyCustomChest(){
+  const raw=document.getElementById('configText').value.trim();
+  if(!raw)return alert('请输入配置');
+  const lines=raw.split('\n').filter(l=>l.trim());
+  const cfg={};
+  const css=['chest-legend','chest-epic','chest-rare','chest-common'];
+  for(let i=0;i<lines.length;i++){
+    const parts=lines[i].split(' ').filter(Boolean);
+    if(parts.length<3)continue;
+    const rarity=parts[0];
+    const rate=parseFloat(parts[1]);
+    if(isNaN(rate))continue;
+    const pool=parts.slice(2).join(' ').split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+    if(!pool.length)continue;
+    cfg[rarity]={rate,pool,css:css[i%css.length]};
+  }
+  if(Object.keys(cfg).length<2)return alert('至少需要2个稀有度等级');
+  CHEST=cfg;
+  alert(`✅ 配置完成！${Object.keys(cfg).length}个稀有度等级`);
+}
+
+// ═══ 切换模式 ═══
+document.getElementById('tabGenshin').onclick=()=>{
+  mode='genshin';
+  document.getElementById('tabGenshin').classList.add('active');
+  document.getElementById('tabChest').classList.remove('active');
+  document.getElementById('configArea').style.display='none';
+  document.getElementById('actions').innerHTML=`
+    <button class="btn-main" onclick="doPull(10)">🌟 十连抽</button>
+    <button class="btn-main" onclick="doPull(1)">单抽</button>
+    <button class="btn-sub" onclick="pitySSR=pitySR=0">🔄 重置保底</button>
+  `;
+  document.getElementById('cards').innerHTML='<div style="color:#555;padding:40px">点击上方按钮开始抽卡 ✨</div>';
+  document.getElementById('stats').innerHTML='';
+};
+
+document.getElementById('tabChest').onclick=()=>{
+  mode='chest';
+  document.getElementById('tabChest').classList.add('active');
+  document.getElementById('tabGenshin').classList.remove('active');
+  document.getElementById('configArea').style.display='block';
+  document.getElementById('actions').innerHTML=`
+    <button class="btn-main" onclick="doPull(5)">🎁 开5箱</button>
+    <button class="btn-main" onclick="doPull(1)">开1箱</button>
+    <button class="btn-sub" onclick="document.getElementById('configArea').style.display='block'">⚙️ 显示配置</button>
+  `;
+  document.getElementById('cards').innerHTML='<div style="color:#555;padding:40px">点击上方按钮开宝箱 🎁</div>';
+  document.getElementById('stats').innerHTML='';
+};
+
+// 初始化
+document.getElementById('tabGenshin').click();
+
+// 注册 Service Worker (PWA 离线支持)
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js')}
+</script>
 </body>
-
 </html>
