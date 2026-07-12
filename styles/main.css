@@ -981,7 +981,7 @@ body {
   position: fixed;
   top: 20px;
   left: 50%;
-  transform: translateX(-50%) translateY(-120px);
+  transform: translateX(-50%) translateY(calc(-100% - 40px));
   z-index: 9999;
   display: flex;
   align-items: center;

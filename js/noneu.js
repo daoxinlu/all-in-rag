@@ -4,28 +4,44 @@
  */
 export { RARITY_META } from './gacha.js';
 
-// ═══ 期望值表 ═══
+// ═══ 期望值表（静态兜底，用于角色祈愿和未知宝箱）═══
+// 宝箱优先用动态计算: calcExpectedWithPity(rate, pity)
 export const EXPECTED_PULLS = {
-  character: { 5: 62.5, 4: 6.67 },
+  character: { 5: 62.5, 4: 6.67 },   // 角色祈愿: 0.6%+90保底(含软保底)
   chest: {
-    default:    { 5: 100 },
-    blessing:   { 5: 1000 },
-    treasure:   { 5: 20000 },
-    recruit:    { 5: 120 },
+    default:    { 5: 63 },            // 标准宝箱: 1%+100保底
+    blessing:   { 5: 1000 },          // 祈福宝箱: 0.1%无保底
+    treasure:   { 5: 20000 },         // 珍宝宝箱: 0.005%无保底
+    recruit:    { 5: 90 },            // 纳贤宝箱: 0.5%+120保底
   },
 };
 
-function getExpected(realm, chestId, rarity) {
-  if (realm === 'character') return EXPECTED_PULLS.character[rarity];
+// 动态计算数学期望: E = Σ k·p·(1-p)^(k-1) + N·(1-p)^(N-1)
+// rate: 小数概率(0.01=1%), pityHard: 保底抽数(0=无保底)
+export function calcExpectedWithPity(rate, pityHard) {
+  if (!pityHard || pityHard <= 0) return Math.round(100 / (rate * 100));  // 无保底 E=1/p
+  const p = rate, N = pityHard, q = 1 - p;
+  const qNm1 = Math.pow(q, N - 1), qN = qNm1 * q;
+  const sum = (1 - N * qNm1 + (N - 1) * qN) / (p * p);
+  return Math.round(p * sum + N * qNm1);
+}
+
+function getExpected(realm, chestId, rarity, chestRate, chestPity) {
+  if (realm === 'character') return EXPECTED_PULLS.character[rarity] || 100;
+  // 宝箱: 优先动态计算
+  if (chestRate != null && chestRate > 0) {
+    const pity = chestPity || 0;
+    return calcExpectedWithPity(chestRate, pity);
+  }
+  // 兜底静态表（旧数据无 rate/pity 时）
   const chest = EXPECTED_PULLS.chest[chestId];
-  if (chest) return chest[rarity] || 100;
-  return 100 / 0.005;
+  return chest ? (chest[rarity] || 100) : 200;
 }
 
 // ═══ 幸运值计算 ═══
-export function calcLuckyValue(realm, chestId, rarity, actualPulls) {
+export function calcLuckyValue(realm, chestId, rarity, actualPulls, chestRate, chestPity) {
   if (actualPulls <= 0) return 100;
-  const expected = getExpected(realm, chestId, rarity);
+  const expected = getExpected(realm, chestId, rarity, chestRate, chestPity);
   return Math.round((expected / actualPulls) * 100);
 }
 
@@ -101,12 +117,13 @@ function recordGachaPull(noneu, { rarity, count, isUp, timestamp }) {
   data[key].push(entry);
 }
 
-function recordChestPull(noneu, { chestId, rarity, name, count, timestamp }) {
+// chestRate: 小数(0.01=1%), chestPity: 保底抽数(0=无保底)
+function recordChestPull(noneu, { chestId, rarity, name, count, chestRate, chestPity, timestamp }) {
   if (rarity < 4) return;
   if (!noneu.chests[chestId]) noneu.chests[chestId] = freshNoneuData('chest');
   const data = noneu.chests[chestId];
-  const lucky = calcLuckyValue('chest', chestId, rarity, count);
-  const expected = getExpected('chest', chestId, rarity);
+  const lucky = calcLuckyValue('chest', chestId, rarity, count, chestRate, chestPity);
+  const expected = getExpected('chest', chestId, rarity, chestRate, chestPity);
   const entry = { count, luckyValue: lucky, name, isPity: count >= expected * 0.8, timestamp: timestamp || Date.now() };
   const key = rarity === 5 ? 'fiveStarHistory' : 'fourStarHistory';
   data[key].push(entry);

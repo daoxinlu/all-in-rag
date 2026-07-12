@@ -290,14 +290,24 @@ function doPullMany(count) {
 }
 
 // ═══ 宝箱 ═══
+function getChestRatePity() {
+  const ct = state.chestTypes[state.currentChestId];
+  if (!ct?.items) return { rate: null, pity: 0 };
+  const totalRate = ct.items.filter(i => i.rarity === 5).reduce((s, i) => s + i.weight, 0) / 100;
+  const pityEnabled = ct.pity?.pity5Enabled;
+  const pity = pityEnabled ? (ct.pity?.pity5Hard || 0) : 0;
+  return { rate: totalRate, pity };
+}
+
 function doOpenChest(count) {
   setChestBtns(true);
   const results = chestEngine.openMany(count);
   const cs = getCurrentChestStats();
+  const rp = getChestRatePity();
   results.forEach(r => {
     cs.total++;
-    if (r.rarity === Rarity.FIVE) { cs.r5++; recordPull(state, 'chest', { chestId:state.currentChestId, rarity:5, name:r.item.name, count:r._pityBefore, timestamp:Date.now() }); }
-    else if (r.rarity === Rarity.FOUR) { cs.r4++; recordPull(state, 'chest', { chestId:state.currentChestId, rarity:4, name:r.item.name, count:r._pityBefore, timestamp:Date.now() }); }
+    if (r.rarity === Rarity.FIVE) { cs.r5++; recordPull(state, 'chest', { chestId:state.currentChestId, rarity:5, name:r.item.name, count:r._pityBefore, chestRate:rp.rate, chestPity:rp.pity, timestamp:Date.now() }); }
+    else if (r.rarity === Rarity.FOUR) { cs.r4++; recordPull(state, 'chest', { chestId:state.currentChestId, rarity:4, name:r.item.name, count:r._pityBefore, chestRate:rp.rate, chestPity:rp.pity, timestamp:Date.now() }); }
     else cs.r3++;
     // 物品级追踪（全稀有度）
     if (r.item?.id) {
