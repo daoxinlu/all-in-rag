@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="description" content="原神风格抽卡模拟器 & 宝箱开启，支持自定义概率，可安装到手机桌面" />
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="抽卡模拟" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./styles/main.css" />
+  <title>抽卡模拟器</title>
+</head>
+<body>
+  <!-- 动态背景 -->
+  <div class="bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <!-- 主容器 -->
+  <div id="app">
+    <!-- 顶部栏 -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="app-logo">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5z"/>
+          </svg>
+        </div>
+        <h1 class="app-title">抽卡模拟器</h1>
+      </div>
+      <button id="installBtn" class="install-btn" style="display:none">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3v12m-5-5l5 5 5-5M5 21h14"/>
+        </svg>
+        安装
+      </button>
+    </header>
+
+    <!-- 模式切换 -->
+    <nav class="mode-tabs">
+      <button class="tab active" data-mode="gacha">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+        角色祈愿
+      </button>
+      <button class="tab" data-mode="chest">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v13h18V7M3 7l3-4h12l3 4M3 7h18M12 11v6m-3-3h6"/></svg>
+        宝箱开启
+      </button>
+      <button class="tab" data-mode="settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3m10-10h-3M5 12H2m15.5-7.5l-2 2m-7 7l-2 2m11 0l-2-2m-7-7l-2-2"/></svg>
+        设置
+      </button>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main id="mainContent">
+      <!-- 角色祈愿面板 -->
+      <section id="gachaPanel" class="panel active">
+        <div class="banner-area">
+          <div class="banner-glow"></div>
+          <div class="banner-info">
+            <div class="banner-title">星辉祈愿</div>
+            <div class="banner-subtitle">UP角色概率提升</div>
+          </div>
+          <div class="featured-char" id="featuredChar"></div>
+        </div>
+
+        <div class="pity-display">
+          <div class="pity-item">
+            <span class="pity-star" data-rarity="5">★★★★★</span>
+            <div class="pity-bar-wrap">
+              <div class="pity-bar" id="pityBar5"></div>
+              <span class="pity-text" id="pityText5">0/90</span>
+            </div>
+          </div>
+          <div class="pity-item">
+            <span class="pity-star" data-rarity="4">★★★★</span>
+            <div class="pity-bar-wrap">
+              <div class="pity-bar" id="pityBar4"></div>
+              <span class="pity-text" id="pityText4">0/10</span>
+            </div>
+          </div>
+          <div class="pity-guarantee" id="guaranteeText"></div>
+        </div>
+
+        <div class="pull-buttons">
+          <button class="pull-btn single" id="singlePullBtn">
+            <span class="pull-btn-label">单抽</span>
+            <span class="pull-btn-cost">x1</span>
+          </button>
+          <button class="pull-btn ten" id="tenPullBtn">
+            <span class="pull-btn-label">十连抽</span>
+            <span class="pull-btn-cost">x10</span>
+          </button>
+        </div>
+        <div class="pull-buttons bulk-buttons">
+          <button class="pull-btn bulk" id="pull99Btn">
+            <span class="pull-btn-label">x99</span>
+            <span class="pull-btn-cost">批量</span>
+          </button>
+          <button class="pull-btn bulk-warn" id="pull999Btn">
+            <span class="pull-btn-label">x999</span>
+            <span class="pull-btn-cost">批量</span>
+          </button>
+        </div>
+
+        <div class="item-list-header">
+          <span>当前奖池</span>
+          <button class="add-item-btn" id="gotoSettingsFromGacha">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3m10-10h-3M5 12H2"/></svg>
+            设置
+          </button>
+        </div>
+        <div class="item-list" id="charPreview"></div>
+
+        <div class="quick-stats" id="gachaStats">
+          <div class="stat-item"><span class="stat-num" id="statTotal">0</span><span class="stat-label">总抽数</span></div>
+          <div class="stat-item gold"><span class="stat-num" id="stat5">0</span><span class="stat-label">五星</span></div>
+          <div class="stat-item purple"><span class="stat-num" id="stat4">0</span><span class="stat-label">四星</span></div>
+        </div>
+        <div class="noneu-bar" id="gachaNoneu"></div>
+        <div class="inline-actions">
+          <button class="reset-btn" id="resetGachaAllBtn">重置数据</button>
+        </div>
+      </section>
+
+      <!-- 宝箱面板 -->
+      <section id="chestPanel" class="panel">
+        <div class="chest-area">
+          <div class="chest-glow"></div>
+          <div class="chest-visual" id="chestVisual">
+            <svg viewBox="0 0 120 100" width="160" height="133">
+              <defs>
+                <linearGradient id="chestGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#a855f7"/>
+                  <stop offset="100%" stop-color="#6b21a8"/>
+                </linearGradient>
+              </defs>
+              <rect x="10" y="40" width="100" height="55" rx="4" fill="url(#chestGrad)" stroke="#d4a0ff" stroke-width="2"/>
+              <path d="M10 45 Q60 15 110 45" fill="url(#chestGrad)" stroke="#d4a0ff" stroke-width="2"/>
+              <rect x="55" y="55" width="10" height="15" rx="2" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+              <circle cx="60" cy="62" r="3" fill="#1a1a2e"/>
+            </svg>
+          </div>
+          <p class="chest-hint" id="chestHint">点击宝箱开启</p>
+        </div>
+
+        <!-- 角色祈愿进度（宝箱页显示） -->
+        <div class="pity-section" id="gachaPityInChest"></div>
+
+        <!-- 宝箱保底进度 -->
+        <div class="pity-section" id="chestPityEl"></div>
+
+        <div class="chest-type-bar">
+          <span>宝箱类型</span>
+          <div class="chest-type-tabs" id="chestTypeTabs"></div>
+        </div>
+
+        <div class="item-list-header">
+          <span>当前奖池</span>
+          <span style="display:flex;gap:6px;flex-shrink:0">
+            <button class="add-item-btn" id="chestItemStatsBtn">📊 统计</button>
+            <button class="add-item-btn" id="gotoSettingsBtn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3m10-10h-3M5 12H2"/></svg>
+            设置
+          </button>
+          </span>
+        </div>
+        <div class="item-list" id="itemPreview"></div>
+
+        <div class="pull-buttons">
+          <button class="pull-btn single" id="openChestBtn">
+            <span class="pull-btn-label">开启宝箱</span>
+          </button>
+          <button class="pull-btn ten" id="openTenChestBtn">
+            <span class="pull-btn-label">连开十次</span>
+          </button>
+        </div>
+        <div class="pull-buttons bulk-buttons">
+          <button class="pull-btn bulk" id="open99ChestBtn">
+            <span class="pull-btn-label">x99</span>
+            <span class="pull-btn-cost">批量</span>
+          </button>
+          <button class="pull-btn bulk-warn" id="open999ChestBtn">
+            <span class="pull-btn-label">x999</span>
+            <span class="pull-btn-cost">批量</span>
+          </button>
+        </div>
+
+        <div class="quick-stats" id="chestStats">
+          <div class="stat-item"><span class="stat-num" id="chestStatTotal">0</span><span class="stat-label">总开箱</span></div>
+          <div class="stat-item gold"><span class="stat-num" id="chestStat5">0</span><span class="stat-label">五星</span></div>
+          <div class="stat-item purple"><span class="stat-num" id="chestStat4">0</span><span class="stat-label">四星</span></div>
+          <div class="stat-item"><span class="stat-num" id="chestStat3">0</span><span class="stat-label">三星</span></div>
+        </div>
+        <div class="noneu-bar" id="chestNoneu"></div>
+        <div class="inline-actions">
+          <button class="reset-btn" id="resetChestAllBtn">重置数据</button>
+        </div>
+      </section>
+
+      <!-- 设置面板 -->
+      <section id="settingsPanel" class="panel">
+        <div class="settings-group">
+          <h3 class="settings-group-title">祈愿概率设置</h3>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              五星基础概率
+              <span class="tooltip">未触发保底时，每次抽取出现五星的基础概率。实际概率受软保底影响，从软保底起始抽数开始逐次递增。</span>
+            </label>
+            <div class="setting-input">
+              <input type="range" min="0" max="100" step="0.1" value="0.6" id="rate5Slider" />
+              <input type="number" min="0" max="100" step="0.1" value="0.6" id="rate5Input" class="num-input" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              四星基础概率
+              <span class="tooltip">未触发保底时，每次抽取出现四星的基础概率。每10抽至少出一个四星（四星保底）。</span>
+            </label>
+            <div class="setting-input">
+              <input type="range" min="0" max="100" step="0.1" value="5.1" id="rate4Slider" />
+              <input type="number" min="0" max="100" step="0.1" value="5.1" id="rate4Input" class="num-input" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              五星硬保底抽数
+              <span class="tooltip">连续未出五星的抽数上限。到达该抽数时，下一抽100%出五星。原神标准为90抽。</span>
+            </label>
+            <div class="setting-input">
+              <input type="range" min="1" max="999" step="1" value="90" id="pity5Slider" />
+              <input type="number" min="1" max="999" step="1" value="90" id="pity5Input" class="num-input" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              软保底起始抽数
+              <span class="tooltip">从该抽数起，五星概率开始逐次递增（每抽+6%）。设为≥硬保底抽数=关闭软保底。原神标准为74抽。</span>
+            </label>
+            <div class="setting-input">
+              <input type="range" min="0" max="990" step="1" value="90" id="softPitySlider" />
+              <input type="number" min="0" max="990" step="1" value="90" id="softPityInput" class="num-input" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              五十五十机制
+              <span class="tooltip">开启后，首次出五星有50%概率为UP角色。若未出UP（歪了），则下次五星必出UP角色（大保底）。</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="fiftyFiftyToggle" checked />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              保底机制总开关
+              <span class="tooltip">关闭后，所有保底逻辑失效，每次抽取均为纯概率判定（软保底、硬保底、四星保底、十连保底均不生效）。</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="pityEnabledToggle" checked />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title">宝箱保底设置</h3>
+          <div class="setting-row" style="padding-bottom:4px">
+            <span style="font-size:0.78rem;color:var(--text-muted)">当前编辑：</span>
+            <span style="font-size:0.85rem;color:var(--primary-light);font-weight:600" id="chestPityChestName">标准宝箱</span>
+          </div>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              五星保底机制
+              <span class="tooltip">开启后，连续未出五星的抽数达到预设值时，必定出五星。无概率递增环节（硬保底）。</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="chestPity5Toggle" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label class="has-tooltip">
+              五星保底抽数
+              <span class="tooltip">达到该抽数后必出五星。可设为任意正整数。</span>
+            </label>
+            <div class="setting-input">
+              <input type="range" min="1" max="99999" step="1" value="100" id="chestPity5Slider" />
+              <input type="number" min="1" max="99999" step="1" value="100" id="chestPity5Input" class="num-input" />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title">宝箱类型管理</h3>
+          <div class="chest-type-bar">
+            <div class="chest-type-tabs" id="settingsChestTabs"></div>
+            <button class="add-item-btn" id="addChestTypeBtn">+ 新增</button>
+          </div>
+          <button class="action-btn danger" id="delChestTypeBtn" style="margin-top:8px;width:100%">删除当前宝箱类型</button>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title">物品池管理</h3>
+          <div class="chest-type-bar">
+            <span>编辑</span>
+            <div class="chest-type-tabs" id="editChestTabs"></div>
+          </div>
+          <div class="item-list-header">
+            <span>物品列表</span>
+            <button class="add-item-btn" id="addItemBtn">+ 添加</button>
+          </div>
+          <div class="item-list" id="itemList"></div>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title">角色池管理</h3>
+          <div class="empty-state" id="charList" style="padding:20px">🚧 敬请期待</div>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title">数据管理</h3>
+          <button class="action-btn danger" id="resetPityBtn">重置保底计数</button>
+          <button class="action-btn danger" id="resetStatsBtn">清空统计数据</button>
+          <button class="action-btn danger" id="resetAllBtn">重置全部</button>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title">⚡ 非欧系统</h3>
+          <div class="setting-row">
+            <label>启用来测测你的欧气吧</label>
+            <label class="switch">
+              <input type="checkbox" id="noneuEnabledToggle" checked />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title">关于</h3>
+          <p class="about-text">抽卡模拟器 v1.0</p>
+          <p class="about-text">支持安装到手机桌面，离线使用</p>
+          <p class="about-text">所有数据保存在本地，不会上传</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- 底部操作栏 -->
+    <footer class="app-footer">
+      <button class="footer-btn" id="historyBtn">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5M3 8c2-4 6-6 10-5s7 4 8 8M21 21v-5h-5M21 16c-2 4-6 6-10 5s-7-4-8-8"/></svg>
+        历史
+      </button>
+      <button class="footer-btn" id="guideBtn">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        说明
+      </button>
+      <button class="footer-btn" id="statsBtn">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10m6 11V6m6 15v-8"/></svg>
+        统计
+      </button>
+      <button class="footer-btn" id="noneuBtn">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+        成就
+      </button>
+    </footer>
+  </div>
+
+  <!-- 抽卡结果弹窗 -->
+  <div id="resultModal" class="modal-overlay">
+    <div class="result-content">
+      <div class="result-cards" id="resultCards"></div>
+      <button class="result-close-btn" id="resultCloseBtn">确认</button>
+    </div>
+  </div>
+
+  <!-- 批量抽取列表结果弹窗 -->
+  <div id="listResultModal" class="modal-overlay">
+    <div class="modal-content list-result-content">
+      <div class="modal-header">
+        <h2 id="listResultTitle">抽取结果</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <!-- 汇总统计 -->
+      <div class="list-summary" id="listSummary"></div>
+      <!-- 筛选标签 -->
+      <div class="list-filter" id="listFilter"></div>
+      <!-- 列表 -->
+      <div class="list-items" id="listItems"></div>
+      <button class="result-close-btn" id="listResultCloseBtn">确认</button>
+    </div>
+  </div>
+
+  <!-- 历史记录弹窗 -->
+  <div id="historyModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>抽取历史</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- 统计弹窗 -->
+  <div id="statsModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>详细统计</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="statsDetail"></div>
+    </div>
+  </div>
+
+  <!-- 添加/编辑角色弹窗 -->
+  <div id="charModal" class="modal-overlay">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2 id="charModalTitle">添加角色</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>角色名称</label>
+          <input type="text" id="charName" placeholder="如：星辉剑士" maxlength="20" />
+        </div>
+        <div class="form-group">
+          <label>图标 (emoji)</label>
+          <input type="text" id="charIcon" placeholder="如：⚔️" maxlength="4" />
+        </div>
+        <div class="form-group">
+          <label>元素/属性</label>
+          <input type="text" id="charElement" placeholder="如：风" maxlength="8" />
+        </div>
+        <div class="form-group">
+          <label>稀有度</label>
+          <div class="rarity-select" id="charRaritySelect">
+            <button class="rarity-opt active" data-rarity="5">★5</button>
+            <button class="rarity-opt" data-rarity="4">★4</button>
+            <button class="rarity-opt" data-rarity="3">★3</button>
+            <button class="rarity-opt" data-rarity="2">★2</button>
+            <button class="rarity-opt" data-rarity="1">★1</button>
+            <button class="rarity-opt" data-rarity="1">★</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="charFeatured" />
+            设为UP角色（仅五星有效）
+          </label>
+        </div>
+        <button class="action-btn primary" id="saveCharBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加物品弹窗 -->
+  <div id="itemModal" class="modal-overlay">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2 id="itemModalTitle">添加物品</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>物品名称</label>
+          <input type="text" id="itemName" placeholder="如：钻石" maxlength="20" />
+        </div>
+        <div class="form-group">
+          <label>稀有度</label>
+          <div class="rarity-select" id="raritySelect">
+            <button class="rarity-opt active" data-rarity="5">★5</button>
+            <button class="rarity-opt" data-rarity="4">★4</button>
+            <button class="rarity-opt" data-rarity="3">★3</button>
+            <button class="rarity-opt" data-rarity="2">★2</button>
+            <button class="rarity-opt" data-rarity="1">★1</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>掉落概率 (权重)</label>
+          <input type="number" id="itemWeight" placeholder="如：10" min="0.001" step="0.001" value="10" />
+        </div>
+        <button class="action-btn primary" id="saveItemBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增宝箱类型弹窗 -->
+  <div id="chestTypeModal" class="modal-overlay">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2>新增宝箱类型</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>宝箱名称</label>
+          <input type="text" id="chestTypeName" placeholder="如：节日宝箱" maxlength="20" />
+        </div>
+        <button class="action-btn primary" id="saveChestTypeBtn">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 确认弹窗（删除等操作） -->
+  <div id="confirmModal" class="modal-overlay">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2 id="confirmTitle">确认操作</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMsg" style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:18px;line-height:1.5"></p>
+        <div style="display:flex;gap:10px">
+          <button class="action-btn" style="flex:1" id="confirmCancelBtn">取消</button>
+          <button class="action-btn danger" style="flex:1" id="confirmOkBtn">确认删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成就解锁弹窗 -->
+  <div class="ach-toast" id="achToast">
+    <div class="ach-toast-icon" id="achToastIcon"></div>
+    <div class="ach-toast-body">
+      <div class="ach-toast-title">🏆 成就解锁！</div>
+      <div class="ach-toast-name" id="achToastName"></div>
+      <div class="ach-toast-desc" id="achToastDesc"></div>
+    </div>
+  </div>
+
+  <!-- 物品统计弹窗 -->
+  <div id="chestItemStatsModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="chestItemStatsTitle">📊 物品获得统计</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="chestItemStatsBody"></div>
+    </div>
+  </div>
+
+  <!-- 非欧成就弹窗 -->
+  <div id="noneuModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🏆 来测测你的欧气吧</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="noneuBody"></div>
+    </div>
+  </div>
+
+  <!-- 概率说明弹窗 -->
+  <div id="guideModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📖 概率计算说明</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="guideContent"></div>
+    </div>
+  </div>
+
+  <!-- 脚本 -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
